@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Stack Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .service-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .service-card h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .status-running {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-stopped {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .logs-container {
+            background: #1e1e1e;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 15px;
+        }
+        
+        .service-links {
+            margin-top: 20px;
+        }
+        
+        .service-links h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .link-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .service-link {
+            display: block;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .service-link:hover {
+            transform: translateY(-3px);
+            color: white;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        @media (max-width: 768px) {
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐳 Docker Stack Management</h1>
+            <p>Manage your Postgres, Redis, pgAdmin, Traefik & Authentik stack</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2>Stack Control</h2>
+                <div class="button-group">
+                    <button class="btn btn-success" onclick="deployStack()">🚀 Deploy Stack</button>
+                    <button class="btn btn-danger" onclick="stopStack()">⏹️ Stop Stack</button>
+                    <button class="btn btn-info" onclick="refreshStatus()">🔄 Refresh Status</button>
+                </div>
+                <div id="alerts"></div>
+            </div>
+            
+            <div class="section">
+                <h2>Service Status</h2>
+                <div id="status-container" class="loading">Loading service status...</div>
+            </div>
+            
+            <div class="section service-links">
+                <h2>Service Access</h2>
+                <div class="link-grid">
+                    <a href="http://localhost/dashboard/" class="service-link" target="_blank">
+                        📊 Traefik Dashboard
+                    </a>
+                    <a href="http://auth.localhost" class="service-link" target="_blank">
+                        🔐 Authentik Admin
+                    </a>
+                    <a href="http://pgadmin.localhost" class="service-link" target="_blank">
+                        🗄️ pgAdmin
+                    </a>
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 6px;">
+                    <strong>Default Credentials:</strong><br>
+                    Username: <code>alwazw</code><br>
+                    Password: <code>WaficWazzan!2</code>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Service Logs</h2>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="showLogs('traefik')">Traefik Logs</button>
+                    <button class="btn btn-primary" onclick="showLogs('authentik-server')">Authentik Logs</button>
+                    <button class="btn btn-primary" onclick="showLogs('postgresql')">PostgreSQL Logs</button>
+                    <button class="btn btn-primary" onclick="showLogs('redis')">Redis Logs</button>
+                    <button class="btn btn-primary" onclick="showLogs('pgadmin')">pgAdmin Logs</button>
+                </div>
+                <div id="logs-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showAlert(message, type = 'success') {
+            const alertsContainer = document.getElementById('alerts');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alertsContainer.innerHTML = '';
+            alertsContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+        
+        async function deployStack() {
+            try {
+                showAlert('Deploying stack...', 'info');
+                const response = await fetch('/api/deploy', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showAlert('Stack deployed successfully!', 'success');
+                    refreshStatus();
+                } else {
+                    showAlert(`Deployment failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function stopStack() {
+            try {
+                showAlert('Stopping stack...', 'info');
+                const response = await fetch('/api/stop', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showAlert('Stack stopped successfully!', 'success');
+                    refreshStatus();
+                } else {
+                    showAlert(`Stop failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function refreshStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                const container = document.getElementById('status-container');
+                
+                if (data.status === 'success') {
+                    container.innerHTML = '';
+                    const grid = document.createElement('div');
+                    grid.className = 'status-grid';
+                    
+                    data.services.forEach(service => {
+                        const card = document.createElement('div');
+                        card.className = 'service-card';
+                        
+                        const isRunning = service.State === 'running';
+                        const statusClass = isRunning ? 'status-running' : 'status-stopped';
+                        
+                        card.innerHTML = `
+                            <h3>${service.Service}</h3>
+                            <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${service.State}</span></p>
+                            <p><strong>Image:</strong> ${service.Image}</p>
+                            <p><strong>Ports:</strong> ${service.Publishers || 'None'}</p>
+                        `;
+                        
+                        grid.appendChild(card);
+                    });
+                    
+                    container.appendChild(grid);
+                } else {
+                    container.innerHTML = `<div class="alert alert-error">Failed to load status: ${data.message}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('status-container').innerHTML = 
+                    `<div class="alert alert-error">Error loading status: ${error.message}</div>`;
+            }
+        }
+        
+        async function showLogs(service) {
+            try {
+                const response = await fetch(`/api/logs/${service}`);
+                const data = await response.json();
+                
+                const container = document.getElementById('logs-container');
+                
+                if (data.status === 'success') {
+                    container.innerHTML = `<div class="logs-container">${data.logs}</div>`;
+                } else {
+                    container.innerHTML = `<div class="alert alert-error">Failed to load logs: ${data.message}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('logs-container').innerHTML = 
+                    `<div class="alert alert-error">Error loading logs: ${error.message}</div>`;
+            }
+        }
+        
+        // Load initial status
+        refreshStatus();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(refreshStatus, 30000);
+    </script>
+</body>
+</html>
+

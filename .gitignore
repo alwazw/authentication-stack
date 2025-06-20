@@ -1,0 +1,28 @@
+# Ignore environment files with real secrets
+.env
+
+# Ignore data directories (will be created on deployment)
+data/
+
+# Ignore Python virtual environments
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore logs
+*.log
+
+# Keep example files
+!.env.example
+
