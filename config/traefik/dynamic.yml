@@ -58,9 +58,20 @@ http:
 tls:
   options:
     default:
-      sslProtocols:
-        - "TLSv1.2"
-        - "TLSv1.3"
+#      # sslProtocols (deprecated):
+#        - "TLSv1.2"
+#        - "TLSv1.3"
+#      cipherSuites:
+#        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+#        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
+#        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+#        - "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"
+#      curvePreferences:
+#        - "CurveP521"
+#        - "CurveP384"
+#      minVersion: "VersionTLS12"
+      minVersion: "VersionTLS12"
+      maxVersion: "VersionTLS13"
       cipherSuites:
         - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
         - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
@@ -69,5 +80,3 @@ tls:
       curvePreferences:
         - "CurveP521"
         - "CurveP384"
-      minVersion: "VersionTLS12"
-

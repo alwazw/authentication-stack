@@ -27,7 +27,7 @@ services:
       - authentik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.traefik.rule=Host(`192.168.2.130` ) && PathPrefix(`/dashboard`)"
       - "traefik.http.routers.traefik.entrypoints=web"
       - "traefik.http.routers.traefik.service=api@internal"
 
@@ -98,7 +98,7 @@ services:
       - redis
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.authentik.rule=Host(`auth.${DOMAIN}`)"
+      - "traefik.http.routers.authentik.rule=Host(`192.168.2.130` )"
       - "traefik.http.routers.authentik.entrypoints=web"
       - "traefik.http.services.authentik.loadbalancer.server.port=9000"
 
@@ -144,16 +144,22 @@ services:
     volumes:
       - ./data/pgadmin:/var/lib/pgadmin
       - ./config/pgadmin/servers.json:/pgadmin4/servers.json:ro
+    ports:
+      - 5050:80
     networks:
       - traefik
       - database
     depends_on:
       - postgresql
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.${DOMAIN}`)"
-      - "traefik.http.routers.pgadmin.entrypoints=web"
-      - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+    # pgAdmin labels - higher priority with more specific rule
+#    labels:
+#      - "traefik.enable=true"
+#      - "traefik.http.routers.pgadmin.rule=Host(`192.168.2.130` ) && PathPrefix(`/pgadmin`)"
+#      - "traefik.http.routers.pgadmin.priority=10"  # Higher priority than Authentik
+#      - "traefik.http.routers.pgadmin.entrypoints=web"
+#      - "traefik.http.routers.pgadmin.middlewares=pgadmin-stripprefix"
+#      - "traefik.http.middlewares.pgadmin-stripprefix.stripprefix.prefixes=/pgadmin"
+#      - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
 
 networks:
   traefik:
